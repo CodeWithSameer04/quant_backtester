@@ -3,6 +3,70 @@ import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
 
+def ensure_data_directory():
+    """Create the data directory if it doesn't exist."""
+    if not os.path.exists('data'):
+        os.makedirs('data')
+        print("Created 'data' directory")
+
+def download_stock_data(symbols, period='5y'):
+    """
+    Download historical stock data for given symbols.
+    
+    Args:
+        symbols (list): List of stock symbols to download
+        period (str): Time period to download (default: '5y' for 5 years)
+    """
+    ensure_data_directory()
+    
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=5*365)  # Approximately 5 years
+    
+    for symbol in symbols:
+        try:
+            print(f"Downloading data for {symbol}...")
+            # Download data using yfinance
+            stock_data = yf.download(
+                symbol,
+                start=start_date.strftime('%Y-%m-%d'),
+                end=end_date.strftime('%Y-%m-%d'),
+                progress=False
+            )
+            
+            # Make sure the required columns exist
+            if 'Close' not in stock_data.columns:
+                print(f"Warning: 'Close' column not found in {symbol} data")
+                continue
+                
+            # Save to CSV file
+            csv_path = os.path.join('data', f"{symbol}.csv")
+            stock_data.to_csv(csv_path)
+            print(f"Saved {symbol} data to {csv_path}")
+            
+        except Exception as e:
+            print(f"Error downloading {symbol} data: {str(e)}")
+
+if __name__ == "__main__":
+    try:
+        # Symbols from main.py
+        symbols = ['AAPL', 'MSFT', 'SPY']
+        download_stock_data(symbols)
+        print("\nData download complete. You can now run main.py")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        
+        # Check if yfinance is installed
+        try:
+            import yfinance
+        except ImportError:
+            print("\nThe yfinance package is not installed.")
+            print("Please install it using: pip install yfinance")
+
+import os
+import pandas as pd
+import yfinance as yf
+from datetime import datetime, timedelta
+
 # Create data directory if it doesn't exist
 data_dir = 'data'
 if not os.path.exists(data_dir):
